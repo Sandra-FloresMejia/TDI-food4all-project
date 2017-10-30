@@ -1,0 +1,537 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang4105{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\*\generator Riched20 10.0.15063}\viewkind4\uc1 
+\pard\sa200\sl240\slmult1\f0\fs22\lang9 #############################\par
+#Original dataset:\par
+#Food Environment Atlas Sept 2017 - \par
+#https://www.ers.usda.gov/data-products/food-environment-atlas/data-access-and-documentation-downloads.aspx\par
+\par
+# set precision digits to 10\par
+options(digits=10)\par
+\par
+setwd("D:/Data Incubator Project/sfm-tdi_food4all")\par
+\par
+#library(gdata)\par
+#require (gdata)\par
+#perl <- gdata:::findPerl("perl")\par
+\par
+#access2 = read.xls ("food_environment_atlas_2017.xls"), sheet = 5, header = TRUE)\par
+access<- data.frame(read.csv("D:/Data Incubator Project/sfm-tdi_food4all/access3.csv", sep= ","))\par
+\par
+#####################\par
+#graph 1:avg_no_people_lowaccess.tiff\par
+#trend of access to stores from: 2015 to 2010\par
+\par
+access<- data.frame(read.csv("D:/Data Incubator Project/sfm-tdi_food4all/access3.csv", sep= ","))\par
+#from access df I need: FIPS, State , County, PCT_LACCESS_POP10\tab CNTY10, PCT_LACCESS_POP15\tab CNTY10\par
+\par
+#library(dplyr)\par
+require (dplyr)\par
+access_10ct <- subset (access, select = c(FIPS, State , County, LACCESS_POP10\tab ))\par
+access_15ct <- subset (access, select = c(FIPS, State , County, LACCESS_POP15))\par
+\par
+#change name to access\par
+names(access_10ct) [4]<-paste ("access")\par
+names(access_15ct) [4]<-paste ("access")\par
+#head(access_15ct)\par
+\par
+#add a column determining the year\par
+access_10ct2 <- mutate(access_10ct, year = "2010")\par
+access_15ct2 <- mutate(access_15ct, year = "2015")\par
+#head(access_10ct2)\par
+#head(access_15ct2)\par
+\par
+#bind 2 df together\par
+access_1015ct <- bind_rows (access_10ct2, access_15ct2)\par
+head(access_1015ct)\par
+#length (access_1015ct$year)\par
+#6286\par
+\par
+#the access has decimals. The poisson and neg bin don't run with decimals nor neg numbers\par
+access_1015ct$access <- round(access_1015ct$access, digits=0)\par
+access_1015ct$access\par
+\par
+access_1015ct$access <- as.numeric (access_1015ct$access)\par
+#to avoid zeros in data - not necesary with round\par
+#access_1015ct$access <- as.numeric (access_1015ct$access+1)\par
+#summary(access_1015ct)\par
+#summary(access_1015ct)\par
+#head(access_1015ct)\par
+\par
+\par
+#access_1015d\par
+#plot(access_1015ct$access ~ access_1015ct$year)\par
+#summary(access_1015ct)\par
+plot(access_1015ct$access~ access_1015ct$State)\par
+\par
+# Calculate trend \par
+require(MASS)\par
+trend_access2<-  glm.nb( access ~ year , data = access_1015ct) \par
+summary(trend_access2)\par
+coef(trend_access2)\par
+\par
+#result: \par
+              #glm.nb(formula = access ~ year, data = access_1015ct, init.theta = 0.4626177782, \par
+              #       link = log)\par
+              \par
+              #Deviance Residuals: \par
+              #  Min          1Q      Median          3Q         Max  \par
+              #-1.9866102  -1.1853454  -0.8361070  -0.2639553   6.0037650  \par
+              \par
+              #Coefficients:\par
+              #  Estimate  Std. Error   z value Pr(>|z|)    \par
+              #(Intercept)  9.91648522  0.02622537 378.12567   <2e-16 ***\par
+              #  year2015    -0.04383113  0.03714463  -1.18001    0.238    \par
+              \par
+              #(Dispersion parameter for Negative Binomial(0.4626) family taken to be 1)\par
+              \par
+              #Null deviance: 8059.0124  on 6266  degrees of freedom\par
+              ##Residual deviance: 8057.6202  on 6265  degrees of freedom\par
+              #(19 observations deleted due to missingness)\par
+              #AIC: 133073.08\par
+              \par
+              #Number of Fisher Scoring iterations: 1\par
+               #Theta:  0.46262 \par
+              #Std. Err.:  0.00677 \par
+              #2 x log-likelihood:  -133067.08300 \par
+\par
+              #coef(trend_access2)\par
+              #(Intercept)       year2015 \par
+              #9.91648521654 -0.04383113135 \par
+\par
+\par
+#to obtain the estimates - in exponential\par
+#exp ( coef(trend_access2))\par
+#(Intercept)        year2015 \par
+#2.026165002e+04 9.571155706e-01 \par
+\par
+\par
+##########\par
+#low access to food sotres: trend by county:\par
+names(access_1015ct)\par
+\par
+trend_access3<-  glm.nb( access ~ State-1 , data = access_1015ct) \par
+summary(trend_access3)\par
+coef(trend_access3)\par
+\par
+#create df with coefficients for plot\par
+dput(coef(trend_access3) )\par
+\par
+#coefficents (log - nb)\par
+coef_trend <- c (8.94997823983453, 9.60495377794396, 8.9934878240718, \par
+                 11.3198984082547, 11.2500139387134, 9.65991257275608, 11.7686392988812, \par
+                 9.60437371912193, 11.1213361413477, 11.0195174199179, 9.63190918597483, \par
+                 11.1659433930024, 8.67960059954422, 8.90653661650551, 10.0552354182894, \par
+                 9.66855083327716, 8.82683243122006, 8.65674230615529, 9.74875121947665, \par
+                 11.7575590146871, 10.7994739562833, 9.30641446447035, 10.1426650223146, \par
+                 9.66949949197475, 9.35256016093548, 8.99816937684508, 8.38629506339912, \par
+                 9.81120999191257, 8.1899671334385, 8.32142812585009, 10.4311924170176, \par
+                 11.5130637887364, 9.90119781186751, 10.0392093752983, 10.5196903289183, \par
+                 10.3004417346386, 9.33995558363704, 9.77790228346239, 10.5614327994914, \par
+                 10.8395691469314, 10.0276593154885, 8.2527520748139, 9.65668300745416, \par
+                 10.0833122406371, 9.85553259982531, 9.29779990581623, 8.55924642764724, \par
+                 10.5622987369304, 9.63571551054354, 8.68141712112018, 8.88461625378853)\par
+\par
+#coefficients re-transformed\par
+exp_coef <- exp(coef_trend)\par
+exp_coef00 <- exp_coef_trend/1000\par
+\par
+#dput (access_10d$State)\par
+state <- c("AK", "AL", "AR", "AZ", \par
+           "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL", \par
+           "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", \par
+           "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", \par
+           "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", \par
+           "WI", "WV", "WY")\par
+\par
+#length(state)\par
+\par
+######## Graph the results: \par
+\par
+require (raster)\par
+#us including counties\par
+#us2 <- getData('GADM', country='USA', level=2)  #Get the County Shapefile for the US\par
+#plot(us2)\par
+\par
+us_map <- getData('GADM', country='USA', level=1)  #Get the County Shapefile for the US\par
+#plot(us_map)\par
+#data.frame (us_map)\par
+#dput(us$NAME_1)\par
+\par
+NAME_1 <- c("Arkansas", "Alaska", "Alabama", "Arizona",\par
+            "California", "Colorado",  "Connecticut",\par
+            "District of Columbia",  "Delaware","Florida", \par
+            "Georgia", "Hawaii", "Iowa", \par
+            "Idaho", "Indiana", "Illinois",\par
+            "Kansas", "Kentucky", "Louisiana",\par
+            "Massachusetts", "Maryland",  "Maine", \par
+            "Michigan", "Minnesota", "Missouri", "Mississippi",\par
+            "Montana", "North Carolina", "North Dakota",\par
+            "Nebraska","New Hampshire", "New Jersey",\par
+            "New Mexico",  "Nevada", "New York",\par
+            "Ohio", "Oklahoma",  "Oregon",\par
+            "Pennsylvania", "Rhode Island", "South Carolina",\par
+            "South Dakota", "Tennessee", "Texas",\par
+            "Utah", "Virginia",  "Vermont",\par
+            "Washington", "Wisconsin", "West Virginia", \par
+            "Wyoming")\par
+\par
+#############################\par
+\par
+#create a csv with the names by state (state= as in the original file, NAME_1= matching the map) and the percentages of model\par
+food_access_ct <- data.frame (state, NAME_1,  coef_trend, exp_coef, exp_coef00) \par
+head(food_access_ct )\par
+#summary(food_access_ct )\par
+#exp_coef_trend = min : 3604.604  max = 129138.312 mean= 28541.224\par
+#add the variable of exp_coef_trend_1000 to facilitate view (see above)\par
+write.csv(food_access_ct, file="food_access_ct.csv")\par
+\par
+us_map2 <- getData('GADM', country='USA', level=1)  #Get the County Shapefile for the US\par
+shapefile (us_map2,"D:/Data Incubator Project/sfm-tdi_food4all/us_map2.shp", overwrite=T )\par
+#plot(us_map2)\par
+#data.frame (us_map2)\par
+#dput(us$NAME_1)\par
+\par
+\par
+#add dataframe of food_access to shapefile of map\par
+#https://gis.stackexchange.com/questions/110183/join-csv-file-to-shapefile\par
+library(raster)\par
+# read data    \par
+p <- shapefile("D:/Data Incubator Project/sfm-tdi_food4all/us_map2.shp" )\par
+d <- read.csv("D:/Data Incubator Project/sfm-tdi_food4all/food_access_ct.csv")\par
+#plot(p)\par
+\par
+# merge on common variable, here called 'NAME_1'\par
+m <- merge(p, d, by='NAME_1')\par
+data.frame(m)\par
+\par
+# save as shapefile again\par
+shapefile(m, "D:/Data Incubator Project/sfm-tdi_food4all/food_access_ct.shp", overwrite=T)\par
+\par
+\par
+\par
+######\par
+library(raster)\par
+# read data    \par
+us_access_food_ct <- shapefile("D:/Data Incubator Project/sfm-tdi_food4all/food_access_ct.shp" )\par
+us_access_food_ct \par
+names(us_access_food_ct )\par
+#data.frame(us_access_food_ct )\par
+#plot(us_access_food_ct )\par
+\par
+##\par
+#plot map\par
+\par
+#the plot is to big because of hawaii, so:\par
+cont_us_access_ct <- subset(us_access_food_ct, NAME_1 %in% \par
+                           c("Arkansas", "Alabama", "Arizona",\par
+                             "California", "Colorado",  "Connecticut",\par
+                             "District of Columbia",  "Delaware","Florida", \par
+                             "Georgia", "Iowa", \par
+                             "Idaho", "Indiana", "Illinois",\par
+                             "Kansas", "Kentucky", "Louisiana",\par
+                             "Massachusetts", "Maryland",  "Maine", \par
+                             "Michigan", "Minnesota", "Missouri", "Mississippi",\par
+                             "Montana", "North Carolina", "North Dakota",\par
+                             "Nebraska","New Hampshire", "New Jersey",\par
+                             "New Mexico",  "Nevada", "New York",\par
+                             "Ohio", "Oklahoma",  "Oregon",\par
+                             "Pennsylvania", "Rhode Island", "South Carolina",\par
+                             "South Dakota", "Tennessee", "Texas",\par
+                             "Utah", "Virginia",  "Vermont",\par
+                             "Washington", "Wisconsin", "West Virginia", \par
+                             "Wyoming"))\par
+\par
+\par
+##\par
+cont_us_access_ct \par
+# -124.7628, -66.94889, 24.52042, 49.3833  (xmin, xmax, ymin, ymax)\par
+#to get the coordinates to put the legend (need some adjustments)\par
+\par
+\par
+summary(cont_us_access_ct$exp_coef)\par
+#names(cont_us_access_ct)\par
+\par
+require(RColorBrewer)\par
+par (mar=c(5,4,4,2))\par
+#display.brewer.all(type="seq")\par
+\par
+library(GISTools)\par
+#if problems with ploting just run: dev.off() and then plot again\par
+\par
+dev.off()\par
+par (mar=c(10,4,4,0))\par
+access_shades = auto.shading(cont_us_access_ct$exp_coef, n=5, cols = brewer.pal(5, "YlOrRd"))\par
+choropleth(cont_us_access_ct , cont_us_access_ct$exp_coef, access_shades) \par
+choropleth(cont_us_access_ct , cont_us_access_ct$exp_coef, access_shades) \par
+#choro.legend(-124.7628,30.52042,access_shades, title = "Average % People with low access to food (2010-2015)", under = "")\par
+choro.legend(-124.7628,30.52042,access_shades, title= "", under="")\par
+title ( "Average number of people with low access to food-stores (2010-2015)")\par
+#avg_no_people_lowaccess.tiff\par
+\par
+#Graph No. 1=\par
+#https://github.com/Sandra-FloresMejia/TDI-food4all-project/blob/master/avg_no_people_lowaccess.tiff\par
+#Average number of people with low access to food-stores for the period between 2010-2015. \par
+# There was a small decrease in the number of people with access to food-stores from 2010 to 2015 (-0.04), but this decrease was not significant (p=0.238).\par
+# In average, per state, there are 27 960 people with low access to food.  \par
+\par
+\par
+      #############################################################################\par
+      #############################################################################\par
+      #############################################################################\par
+\par
+#Second graph = Households (no car & low access to store) 2010 vs. 2015\par
+\par
+access<- data.frame(read.csv("D:/Data Incubator Project/sfm-tdi_food4all/access3.csv", sep= ","))\par
+      #Access and Proximity to Grocery Store\tab ACCESS\tab Overall\tab Population, low access to store, 2010\tab LACCESS_POP10\tab CNTY10\tab Count\par
+      #Access and Proximity to Grocery Store\tab ACCESS\tab Overall\tab Population, low access to store, 2015\tab LACCESS_POP15\tab CNTY10\tab Count\par
+      \par
+      #library(dplyr)\par
+require (dplyr)\par
+      \par
+      hhnv_10ct <- subset (access, select = c(FIPS, State , County, LACCESS_HHNV10\tab ))\par
+      hhnv_15ct <- subset (access, select = c(FIPS, State , County, LACCESS_HHNV15))\par
+      \par
+      #change name to access\par
+      names(hhnv_10ct) [4]<-paste ("hhnv")\par
+      names(hhnv_15ct) [4]<-paste ("hhnv")\par
+      head(hhnv_15ct)\par
+      \par
+      \par
+      #add a column determining the year\par
+      hhnv_10ct2 <- mutate(hhnv_10ct, year = "2010")\par
+      hhnv_15ct2 <- mutate(hhnv_15ct, year = "2015")\par
+      #head(hhnv_10ct2)\par
+      #head(hhnv_15ct2)\par
+      \par
+      #bind 2 df together\par
+      hhnv_1015ct <- bind_rows (hhnv_10ct2, hhnv_15ct2)\par
+      head(hhnv_1015ct)\par
+      length (hhnv_1015ct$year)\par
+      #6286\par
+      \par
+      #for some reason the hhnv has decimals. The poisson and neg bin don't run with decinmals nor neg numbers\par
+      hhnv_1015ct$hhnv <- round(hhnv_1015ct$hhnv, digits=0)\par
+      #to avoid zeros in data \par
+      hhnv_1015ct$hhnv <- as.numeric (hhnv_1015ct$hhnv+1)\par
+      hhnv_1015ct$hhnv\par
+      \par
+      plot(hhnv_1015ct$hhnv~ hhnv_1015ct$State)\par
+      #hhnv_per_state.tiff\par
+      \par
+      # Calculate trend \par
+      require(MASS)\par
+      trend_hhnv<-  glm.nb( hhnv ~ year , data = hhnv_1015ct) \par
+      summary(trend_hhnv)\par
+      coef(trend_hhnv)\par
+      \par
+      \par
+      #Call:\par
+      #  glm.nb(formula = hhnv ~ year, data = hhnv_1015ct, init.theta = 0.7030132475, \par
+      #         link = log)\par
+      #\par
+      #Deviance Residuals: \par
+        #Min          1Q      Median          3Q         Max  \par
+        #-2.5620432  -1.1089150  -0.5317949   0.0791622   5.3596933  \par
+      \par
+        #Coefficients:\par
+        #  Estimate Std. Error   z value Pr(>|z|)    \par
+        #(Intercept) 6.49644909 0.02128513 305.21072  < 2e-16 ***\par
+        #  year2015    0.01938163 0.03010875   0.64372  0.51976    \par
+\par
+          #(Dispersion parameter for Negative Binomial(0.703) family taken to be 1)\par
+         #Null deviance: 7569.6330  on 6282  degrees of freedom\par
+        #Residual deviance: 7569.2186  on 6281  degrees of freedom\par
+        #(3 observations deleted due to missingness)\par
+        #AIC: 93750.492\par
+      \par
+        #Number of Fisher Scoring iterations: 1\par
+        #Theta:  0.7030 \par
+        #Std. Err.:  0.0107 \par
+       #2 x log-likelihood:  -93744.4920 \par
+                \par
+        #> coef(trend_hhnv)\par
+        #(Intercept)      year2015 \par
+        #6.49644909148 0.01938163422  \par
+        #p-value for slope = 0.51976 = NS\par
+      \par
+     #to obtain the estimates - in exponential\par
+      exp ( coef(trend_hhnv))\par
+      #(Intercept)        year2015 \par
+      #662.783964365   1.019570677 \par
+      \par
+ ##################################     \par
+      \par
+#trend by county:\par
+      trend_hhnv2 <-  glm.nb( hhnv ~ State-1 , data = hhnv_1015ct) \par
+      \par
+  summary(trend_hhnv2)\par
+      coef(trend_hhnv2)\par
+      \par
+      #create df with coefficients for plot\par
+      dput(coef(trend_hhnv2) )\par
+      \par
+      #coefficents (log - nb)\par
+      coef_hhnv <- c(6.16189819312957, 6.77201248779332, 6.13510302397579, \par
+                        7.79987626154909, 7.26443453325641, 5.86034096765905, 7.86605130500132, \par
+                        7.34729970074316, 7.70706265537047, 7.39848479955629, 6.35844703438557, \par
+                        7.23785008006552, 5.36927463730506, 5.08661381006386, 6.43377512638599, \par
+                        6.3601942569049, 5.19968022998402, 6.10929387798902, 6.77299992333467, \par
+                        7.94160044895767, 7.02792435466852, 6.85692240490068, 6.83554726166032, \par
+                        6.10416444281421, 6.08202035979503, 6.2708270467123, 4.81014976667463, \par
+                        6.95424279408889, 4.26015210346093, 4.52732488303996, 7.05927392662105, \par
+                        7.76714302657631, 6.21263645904837, 6.29075181217322, 7.29873424735696, \par
+                        7.07327934761364, 6.0291231016657, 6.25873130460883, 7.42311835412214, \par
+                        7.29858041035078, 7.21595902961395, 4.64940453362166, 6.52101636763343, \par
+                        6.42665726312614, 5.56313220680229, 6.1367893310535, 6.19104698829853, \par
+                        6.62746462598119, 6.3231261238951, 6.44146837052822, 4.96527402714258    )\par
+      \par
+      #coefficients re-transformed\par
+      exp_hhnv <- exp(coef_hhnv)\par
+      summary(exp_hhnv)\par
+      exp_hhnv00 <- exp_hhnv/1000\par
+\par
+      #dput (access_10d$State)\par
+      state <- c("AK", "AL", "AR", "AZ", \par
+                 "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL", \par
+                 "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", \par
+                 "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", \par
+                 "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", \par
+                 "WI", "WV", "WY")\par
+      \par
+      #length(state)\par
+      \par
+\par
+      \par
+      ######## plot results\par
+       require (raster)\par
+      \par
+      #us including counties\par
+      #us2 <- getData('GADM', country='USA', level=2)  #Get the County Shapefile for the US\par
+      #plot(us2)\par
+      \par
+      us_map <- getData('GADM', country='USA', level=1)  #Get the County Shapefile for the US\par
+      #plot(us_map)\par
+      #data.frame (us_map)\par
+      #dput(us$NAME_1)\par
+      \par
+      NAME_1 <- c("Arkansas", "Alaska", "Alabama", "Arizona",\par
+                  "California", "Colorado",  "Connecticut",\par
+                  "District of Columbia",  "Delaware","Florida", \par
+                  "Georgia", "Hawaii", "Iowa", \par
+                  "Idaho", "Indiana", "Illinois",\par
+                  "Kansas", "Kentucky", "Louisiana",\par
+                  "Massachusetts", "Maryland",  "Maine", \par
+                  "Michigan", "Minnesota", "Missouri", "Mississippi",\par
+                  "Montana", "North Carolina", "North Dakota",\par
+                  "Nebraska","New Hampshire", "New Jersey",\par
+                  "New Mexico",  "Nevada", "New York",\par
+                  "Ohio", "Oklahoma",  "Oregon",\par
+                  "Pennsylvania", "Rhode Island", "South Carolina",\par
+                  "South Dakota", "Tennessee", "Texas",\par
+                  "Utah", "Virginia",  "Vermont",\par
+                  "Washington", "Wisconsin", "West Virginia", \par
+                  "Wyoming")\par
+      \par
+      \par
+      #############################\par
+    \par
+      #create a csv with the names by state (state= as in the original file, NAME_1= matching the map) and the percentages of model\par
+      food_hhnv_ct <- data.frame (state, NAME_1,  coef_hhnv, exp_hhnv, exp_hhnv00) \par
+      head(food_hhnv_ct )\par
+      \par
+      #summary(food_hhnv_ct )\par
+      #    Min.    1st Qu.     Median       Mean    3rd Qu.       Max. \par
+      #70.82075  448.86961  618.10433  883.05683 1270.49481 2811.85714 \par
+      #add the variable of exp_coef_trend_1000 to facilitate view (see above)\par
+\par
+      write.csv(food_hhnv_ct, file="food_hhnv_ct.csv")\par
+      \par
+      us_map2 <- getData('GADM', country='USA', level=1)  #Get the County Shapefile for the US\par
+      shapefile (us_map2,"D:/Data Incubator Project/sfm-tdi_food4all/us_map2.shp", overwrite=T )\par
+      #plot(us_map2)\par
+      #data.frame (us_map2)\par
+      #dput(us$NAME_1)\par
+      \par
+      \par
+      #add dataframe of food_access to shapefile of map\par
+      #https://gis.stackexchange.com/questions/110183/join-csv-file-to-shapefile\par
+      library(raster)\par
+      # read data    \par
+      p <- shapefile("D:/Data Incubator Project/sfm-tdi_food4all/us_map2.shp" )\par
+      d <- read.csv("D:/Data Incubator Project/sfm-tdi_food4all/food_hhnv_ct.csv")\par
+      #plot(p)\par
+      \par
+      # merge on common variable, here called 'NAME_1'\par
+      m <- merge(p, d, by='NAME_1')\par
+      data.frame(m)\par
+      \par
+      # save as shapefile again\par
+      shapefile(m, "D:/Data Incubator Project/sfm-tdi_food4all/food_hhnv_ct.shp", overwrite=T)\par
+      \par
+      ######\par
+     \par
+      \par
+     # library(raster)\par
+      # read data    \par
+      food_hhnv <- shapefile("D:/Data Incubator Project/sfm-tdi_food4all/food_hhnv_ct.shp" )\par
+      food_hhnv \par
+      names(food_hhnv )\par
+      #data.frame(food_hhnv )\par
+      #plot(food_hhnv )\par
+      \par
+      ##\par
+     \par
+      #the plot is to big because of hawaii, so:\par
+      cont_us_food_hhnv <- subset(food_hhnv, NAME_1 %in% \par
+                                    c("Arkansas", "Alabama", "Arizona",\par
+                                      "California", "Colorado",  "Connecticut",\par
+                                      "District of Columbia",  "Delaware","Florida", \par
+                                      "Georgia", "Iowa", \par
+                                      "Idaho", "Indiana", "Illinois",\par
+                                      "Kansas", "Kentucky", "Louisiana",\par
+                                      "Massachusetts", "Maryland",  "Maine", \par
+                                      "Michigan", "Minnesota", "Missouri", "Mississippi",\par
+                                      "Montana", "North Carolina", "North Dakota",\par
+                                      "Nebraska","New Hampshire", "New Jersey",\par
+                                      "New Mexico",  "Nevada", "New York",\par
+                                      "Ohio", "Oklahoma",  "Oregon",\par
+                                      "Pennsylvania", "Rhode Island", "South Carolina",\par
+                                      "South Dakota", "Tennessee", "Texas",\par
+                                      "Utah", "Virginia",  "Vermont",\par
+                                      "Washington", "Wisconsin", "West Virginia", \par
+                                      "Wyoming"))\par
+      \par
+\par
+      cont_us_food_hhnv \par
+      # -124.7628, -66.94889, 24.52042, 49.3833  (xmin, xmax, ymin, ymax)\par
+      #to get the coordinates to put the legend (need some adjustments)\par
+      \par
+      summary(cont_us_food_hhnv$exp_hhnv)\par
+      #names(cont_us_food_hhnv)\par
+      \par
+      require(RColorBrewer)\par
+      par (mar=c(5,4,4,2))\par
+      #display.brewer.all(type="seq")\par
+      \par
+      library(GISTools)\par
+      #if problems with ploting just run: dev.off() and then plot again\par
+      \par
+      dev.off()\par
+      par (mar=c(10,4,4,0))\par
+      access_shades = auto.shading(cont_us_food_hhnv$exp_hhnv, n=5, cols = brewer.pal(5, "YlOrRd"))\par
+      choropleth(cont_us_food_hhnv , cont_us_food_hhnv$exp_hhnv, access_shades) \par
+      choropleth(cont_us_food_hhnv , cont_us_food_hhnv$exp_hhnv, access_shades) \par
+      #choro.legend(-124.7628,30.52042,access_shades, title = "Average % People with low access to food (2010-2015)", under = "")\par
+      choro.legend(-124.7628,30.52042,access_shades, title= "", under="")\par
+      title ( "Average households with no car & low access to food-stores (2010-2015)")\par
+      #hhnv_lowaccess_2010-2015.tiff\par
+      \par
+      #Graph No. 2=\par
+      #https://github.com/Sandra-FloresMejia/TDI-food4all-project/blob/master/hhnv_lowaccess_2010-2015.tiff\par
+      #Average number of households  with no car & low access to food-stores for the period between 2010-2015. \par
+      #There was a slight increase (0.0193) in the number of households with no vehicles & low access to food-stores from 2010 to 2015. \par
+      #However this increase was not statistically significant ( p-value = 0.51976).\par
+      \par
+      \par
+}
+ 
