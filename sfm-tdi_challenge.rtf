@@ -1,0 +1,359 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang4105{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\*\generator Riched20 10.0.15063}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9 # set precision digits to 10\par
+options(digits=10)\par
+\par
+\par
+setwd("D:/Data Incubator Project/Challenge")\par
+Accidents0514 <- data.frame(read.csv ("D:/Data Incubator Project/Challenge/Accidents0514-3.csv", sep = ",") )\par
+head(Accidents0514)\par
+summary(Accidents0514)\par
+length(Accidents0514$Accident_Severity)\par
+#1 640 597\par
+attach(Accidents0514)\par
+\par
+\par
+####################################################\par
+# What fraction of accidents occur in urban areas? Report the answer in decimal form.\par
+#Urban_or_Rural_Area\par
+# 1 = urban; 2 = small town, 3= rural -1 = missing data\par
+\par
+\par
+head(Accidents0514$Urban_or_Rural_Area)\par
+Accidents0514$Urban_or_Rural_Area <- as.character(Accidents0514$Urban_or_Rural_Area)\par
+\par
+urban_rural2 <- data.frame (urban_rural = Accidents0514$Urban_or_Rural_Area, check.names = T)\par
+\par
+#head(urban_rural)\par
+names(urban_rural2)\par
+summary(urban_rural2)\par
+#urban_rural\par
+#1:1054341  \par
+#2: 586113  \par
+#3:    143\par
+\par
+no_urban <- length(which (urban_rural2$urban_rural == "1"))\par
+no_urban\par
+#1054341\par
+\par
+no_smalltown <- length(which (urban_rural2$urban_rural == "2"))\par
+no_smalltown\par
+#586113\par
+\par
+\par
+no_rural <- length(which (urban_rural2$urban_rural == "3"))\par
+no_rural\par
+#143\par
+\par
+no_missing <- length(which (urban_rural2$urban_rural == "-1"))\par
+no_missing\par
+#0\par
+\par
+total_urban_rural <- sum(no_rural, no_urban, no_smalltown )\par
+total_urban_rural \par
+# 1640597\par
+\par
+no_urban/total_urban_rural \par
+#0.6426569109\par
+\par
+\par
+######\par
+\par
+#There appears to be a linear trend in the number of accidents that occur each year. \par
+#What is that trend? Return the slope in units of increased number of accidents per year\par
+\par
+\par
+date<-  data.frame(date1 = Accidents0514$Date)                  \par
+#convert to date format & extract year\par
+date$year <- format(as.Date(date$date1, format="%d/%m/%Y"),"%Y") \par
+head(date) \par
+\par
+date$year <- as.character(date$year)\par
+y05<- length(which (date$year == "2005"))\par
+y06<- length(which (date$year == "2006"))\par
+y07<- length(which (date$year == "2007"))\par
+y08<- length(which (date$year == "2008"))\par
+y09<- length(which (date$year == "2009"))\par
+y10<- length(which (date$year == "2010"))\par
+y11<- length(which (date$year == "2011"))\par
+y12<- length(which (date$year == "2012"))\par
+y13<- length(which (date$year == "2013"))\par
+y14<- length(which (date$year == "2014"))\par
+\par
+#verify the number of accidents in period 2005-2014\par
+total_year <- sum ( y05, y06, y07, y08, y09, y10, y11, y12, y13, y14)                \par
+total_year                  \par
+#1640597\par
+\par
+#create database with accidents per year\par
+year <- c (2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 )\par
+acc_year <- c( y05, y06, y07, y08, y09, y10, y11, y12, y13, y14)  \par
+\par
+#fit linear model\par
+lm_acc_per_yr <-  lm( acc_year ~ year) \par
+coef(lm_acc_per_yr)\par
+#Answer: -6511.727273  less accidents per year\par
+\par
+\par
+\par
+######\par
+\par
+#How many times more likely are you to be in an accident where you skid, jackknife, or overturn \par
+#(as opposed to an accident where you don't) when it's raining or snowing compared to nice weather with no high winds? \par
+#Ignore accidents where the weather is unknown or missing. \par
+\par
+\par
+library(dplyr)\par
+require(dplyr)\par
+\par
+\par
+names(Accidents0514)\par
+vehicles0514 <- data.frame(read.csv ("D:/Data Incubator Project/Challenge/Vehicles0514-2.csv", sep = ",") )\par
+names(vehicles0514)\par
+attach(vehicles0514)\par
+\par
+\par
+#subset the variables of interest:\par
+weather <- as.character (Accidents0514$Weather_Conditions)\par
+id <- as.character(Accidents0514$\'ef..Accident_Index)\par
+weather_df<- data.frame(id, weather)\par
+\par
+skid <- as.character (vehicles0514$Skidding_and_Overturning)\par
+id<- as.character (vehicles0514$\'ef..Accident_Index)\par
+skid_df <- data.frame(id, skid)\par
+\par
+#subset the common data from the 2 dataframes\par
+weather_skid <- data.frame ( weather_df %>% inner_join(skid_df, by = "id"))\par
+names( weather_skid  )\par
+summary(weather_skid)\par
+length( weather_skid$id)   #3004425\par
+\par
+\par
+#create variables where:\par
+# 1 = skid, jacknife or overturn\par
+# 0 = none of the above\par
+\par
+#code\tab label\par
+#0\tab None\par
+#1\tab Skidded\par
+#2\tab Skidded and overturned\par
+#3\tab Jackknifed\par
+#4\tab Jackknifed and overturned\par
+#5\tab Overturned\par
+#-1\tab Data missing or out of range\par
+\par
+weather_skid$skid <- as.character(weather_skid$skid)\par
+weather_skid$skid_noskid [weather_skid$skid == "0"] <- "0"\par
+weather_skid$skid_noskid [weather_skid$skid == "1"] <- "1"\par
+weather_skid$skid_noskid [weather_skid$skid == "2"] <- "1"\par
+weather_skid$skid_noskid [weather_skid$skid == "3"] <- "1"\par
+weather_skid$skid_noskid [weather_skid$skid == "4"] <- "1"\par
+weather_skid$skid_noskid [weather_skid$skid == "5"] <- "1"\par
+weather_skid$skid_noskid [weather_skid$skid == "-1"] <- NA\par
+weather_skid$skid_noskid <- as.factor (weather_skid$skid_noskid)\par
+summary(weather_skid)\par
+\par
+\par
+#rain = rain or snow (low and high winds)\par
+#nice_nw= nice weather no high winds\par
+#NA = weather is unknown or missing\par
+\par
+    #Weather: @ Accidents0514$Weather_Conditions\par
+    #code\tab label\par
+    #1\tab Fine no high winds\par
+    #2\tab Raining no high winds\par
+    #3\tab Snowing no high winds\par
+    #4\tab Fine + high winds\par
+    #5\tab Raining + high winds\par
+    #6\tab Snowing + high winds\par
+    #7\tab Fog or mist\par
+    #8\tab Other\par
+    #9\tab Unknown\par
+    #-1\tab Data missing or out of range\par
+\par
+\par
+weather_skid$weather <- as.character(weather_skid$weather)\par
+weather_skid$rain_norain [weather_skid$weather == "1"] <- "fine_nw"\par
+weather_skid$rain_norain [weather_skid$weather == "2"] <- "rain"\par
+weather_skid$rain_norain [weather_skid$weather == "3"] <- "rain"\par
+weather_skid$rain_norain [weather_skid$weather == "4"] <- "other"\par
+weather_skid$rain_norain [weather_skid$weather == "5"] <- "rain"\par
+weather_skid$rain_norain [weather_skid$weather == "6"] <- "rain"\par
+weather_skid$rain_norain [weather_skid$weather == "7"] <- "other"\par
+weather_skid$rain_norain [weather_skid$weather == "8"] <- "other"\par
+weather_skid$rain_norain [weather_skid$weather == "9"] <- NA\par
+weather_skid$rain_norain [weather_skid$weather == "-1"] <- NA\par
+\par
+weather_skid$rain_norain <- as.factor (weather_skid$rain_norain) \par
+summary(weather_skid) \par
+\par
+\par
+#eliminate the NA's from unknown weather\par
+library(tidyr)\par
+ws<- weather_skid %>% drop_na(rain_norain) \par
+ws2<- data.frame(ws)\par
+\par
+\par
+ws2$skid_noskid <- as.character(ws2$skid_noskid)\par
+ws2$rain_norain <- as.character(ws2$rain_norain)\par
+\par
+#subset data according to skid_noskid & rain_norain combinations\par
+\par
+noskid_fine_nw <- subset(ws2, ws2$skid_noskid == 0 & ws2$rain_norain == 'fine_nw' , select = c(id, weather, skid, skid_noskid, rain_norain))\par
+total_noskid_fine_nw <-length(noskid_fine_nw$id)\par
+\par
+noskid_rain <- subset(ws2, ws2$skid_noskid == 0 & ws2$rain_norain == 'rain' , select = c(id, weather, skid, skid_noskid, rain_norain))\par
+total_noskid_rain <-length(noskid_rain$id)\par
+\par
+#noskid - other\par
+noskid_other <- subset(ws2, ws2$skid_noskid == 0 & ws2$rain_norain == 'other' , select = c(id, weather, skid, skid_noskid, rain_norain))\par
+total_noskid_other <-length(noskid_other$id)\par
+\par
+#skid - fine_nw\par
+skid_fine_nw <- subset(ws2, ws2$skid_noskid == 1 & ws2$rain_norain == 'fine_nw' , select = c(id, weather, skid, skid_noskid, rain_norain))\par
+total_skid_fine_nw <-length(skid_fine_nw$id)\par
+\par
+#skid - rain\par
+skid_rain <- subset(ws2, ws2$skid_noskid == 1 & ws2$rain_norain == 'rain' , select = c(id, weather, skid, skid_noskid, rain_norain))\par
+total_skid_rain  <-length(skid_rain$id)\par
+\par
+#skid - other\par
+skid_other <- subset(ws2, ws2$skid_noskid == 1 & ws2$rain_norain == 'other' , select = c(id, weather, skid, skid_noskid, rain_norain))\par
+total_skid_other <-length(skid_other$id)\par
+\par
+#na - fine_nw\par
+na_fine_nw <- data.frame(filter(ws2, is.na(skid_noskid) & rain_norain == 'fine_nw') )\par
+total_na_fine_nw <-length(na_fine_nw$id)\par
+\par
+#na - rain\par
+na_rain <- data.frame(filter(ws2, is.na(skid_noskid) & rain_norain == 'rain') )\par
+total_na_rain  <-length(na_rain$id)\par
+\par
+#na - rain\par
+na_other <- data.frame(filter(ws2, is.na(skid_noskid) & rain_norain == 'other') )\par
+total_na_other  <-length(na_other$id)\par
+\par
+\par
+#construct odds table \par
+ws_odds <- matrix (c( total_noskid_fine_nw, total_noskid_rain, total_noskid_other, \par
+                      total_skid_fine_nw, total_skid_rain, total_skid_other,\par
+                      total_na_fine_nw, total_na_rain , total_na_other  ), ncol=3)\par
+\par
+colnames(ws_odds) <- c('noskid', 'skid', 'NA') \par
+rownames(ws_odds) <- c('fine_nw', 'rain', 'other')\par
+ws_odds_table <- as.table (ws_odds)\par
+ws_odds_table\par
+\par
+#calculate the proportions by rows\par
+prop.out<- prop.table(ws_odds_table, margin=1)\par
+\par
+#prop skid in rain/snow [2,2] / prop no_skid in good weather [1,1]\par
+(prop.out[2,2]/prop.out[1,1])\par
+#0.2362786975 = 23.62 % of happenning\par
+#ANSWER: odds of happening (0.2362786975 / (1-0.2362786975) ) = 0.3093781681 to 1\par
+\par
+\par
+\par
+####\par
+\par
+#When is the most dangerous time to drive? \par
+\par
+\par
+\par
+#first, subset the variables of interest:  Accidents0514\par
+names(Accidents0514)\par
+#hour at Accidents0514$Time\par
+#format: HH:MM  \par
+\par
+id <- as.character(Accidents0514$\'ef..Accident_Index)\par
+\par
+hour_df2 <-  within(Accidents0514,\par
+                    \{ hourb <- as.POSIXlt (Time, format = "%H:%M" )\par
+                    hours <- hourb$hour\par
+                    min <- hourb$min\par
+                    \}) \par
+\par
+head(hour_df2)\par
+hour_df2$id <- hour_df2$\'ef..Accident_Index\par
+\par
+\par
+hour_id <- subset (hour_df2, select = c(id , hours))\par
+\par
+#casualties0514\par
+casualties0514 <- data.frame(read.csv ("D:/Data Incubator Project/Challenge/Casualties0514-2.csv", sep = ",") )\par
+names(casualties0514)\par
+head(casualties0514)\par
+severity <- as.character(casualties0514$Casualty_Severity)\par
+id <- as.character(casualties0514$\'ef..Accident_Index)\par
+severity_df <- data.frame(id,severity )\par
+head(severity_df)\par
+length(severity_df$id)\par
+\par
+\par
+# sum # of total fatalities by id\par
+\par
+#first transform to type of casualty:\par
+#Casualty_severity \par
+#code\tab label\par
+#1\tab Fatal\par
+#2\tab Serious\par
+#3\tab Slight\par
+\par
+severity_df$severity <- as.character(severity_df$severity )\par
+severity_df$severity_class  [severity_df$severity  == "1"] <- "fatal"\par
+severity_df$severity_class  [severity_df$severity  == "2"] <- "serious"\par
+severity_df$severity_class  [severity_df$severity  == "3"] <- "slight"\par
+severity_df$severity_class <- as.factor (severity_df$severity_class)\par
+severity_df$id<- as.factor (severity_df$id)\par
+summary(severity_df)\par
+head(severity_df)\par
+\par
+\par
+\par
+\par
+#sum total accidents by id\par
+#library(plyr)\par
+total_accident <- data.frame (count(severity_df, vars=c("id")) )\par
+\par
+\par
+#extract fatalities per id\par
+fatal <- subset (severity_df, severity_df$severity_class == 'fatal', select = c(id, severity, severity_class)) \par
+head(fatal )\par
+summary(fatal )\par
+length(fatal$id) #=23072\par
+length(fatal$severity_class)\par
+\par
+#sum total fatalities by id\par
+library(plyr)\par
+fatal_ct_per_id <- data.frame (count(fatal, vars=c("id")) )\par
+\par
+\par
+#subset the common data from the 2 dataframe\par
+\par
+#(hour_id) &  (fatal_ct_per_id )\par
+total_fat_hr <- data.frame ( fatal_ct_per_id %>% inner_join(hour_id, by = "id"))\par
+\par
+\par
+##total accidents per hour\par
+#(hour_id)  & (total_accident)\par
+total_acc_hr <- data.frame ( total_accident %>% inner_join(hour_id, by = "id"))\par
+\par
+#sum total accidents per hour\par
+acc_per_hr <- data.frame (count(total_acc_hr, vars=c("hours")) )\par
+\par
+#sum total fatalities per hour\par
+fatalper_hr <- data.frame (count(total_fat_hr, vars=c("hours")) )\par
+\par
+#join the two dataframes by hour as common denominator\par
+fatal_total <- full_join(acc_per_hr , fatalper_hr, by = "hours") \par
+\par
+#obtain the proportion of fatalities/total accidents\par
+fatal_total$prop <- (fatal_total$freq.y/fatal_total$freq.x)\par
+#obtain the maximum value\par
+max(fatal_total$prop)\par
+#Answer: 4 am; frequency: 0.03152156739\par
+\par
+\par
+##################\par
+}
+ 
